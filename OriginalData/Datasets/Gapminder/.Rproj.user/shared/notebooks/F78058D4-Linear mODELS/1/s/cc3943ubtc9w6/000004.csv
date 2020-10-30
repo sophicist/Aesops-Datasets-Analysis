@@ -1,0 +1,3 @@
+"0","# one Country"
+"0","au <- filter(gapminder, country == ""Australia"")"
+"0","ggplot(au,aes(year, lifeExp)) + geom_line()"

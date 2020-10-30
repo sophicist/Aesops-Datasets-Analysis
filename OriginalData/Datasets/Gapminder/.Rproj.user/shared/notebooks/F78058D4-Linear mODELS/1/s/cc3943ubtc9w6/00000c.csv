@@ -1,0 +1,3 @@
+"0","# unnest the dataframe"
+"0","gapminder.coef  <- gapminder.model %>% unnest(coef)"
+"0","gapminder.coef"

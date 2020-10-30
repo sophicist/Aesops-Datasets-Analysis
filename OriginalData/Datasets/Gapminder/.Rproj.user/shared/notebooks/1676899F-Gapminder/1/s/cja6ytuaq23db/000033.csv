@@ -1,0 +1,5 @@
+"0","library(plotly)"
+"0","countries <- c(""Kenya"",""Uganda"",""Tanzania"",""Nigeria"",""Ethiopia"",""Egypt"",""SouthAfrica"",""USA"",""Brazil"",""Britain"",""China"",""India"")"
+"0","#describe(df)"
+"0","Graph <- df %>% filter(country %in% countries) %>% ggplot(aes(x = year,y =gdpPercap,color = country))+geom_line()+labs(title = ""GDP growth rates over the years"")+theme(plot.title = element_text(hjust = 0.5)) + geom_point()"
+"0","ggplotly(Graph)"

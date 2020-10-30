@@ -1,0 +1,13 @@
+"0","# how to get the nested data"
+"0","gapminder.nested$data[3]"
+"1","<list_of<
+  tbl_df<
+    year     : integer
+    lifeExp  : double
+    pop      : integer
+    gdpPercap: double
+  >
+>[1]>
+"
+"1","[[1]]
+"

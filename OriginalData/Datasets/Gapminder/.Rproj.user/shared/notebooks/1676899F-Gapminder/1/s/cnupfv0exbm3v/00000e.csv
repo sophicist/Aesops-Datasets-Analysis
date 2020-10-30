@@ -1,0 +1,7 @@
+"0",""
+"0","do.call(addMapLegend"
+"0","        ,c(mapParams"
+"0","           ,legendLabels=""all"""
+"0","           ,legendWidth=0.5"
+"0","           ,legendIntervals=""data"""
+"0","           ,legendMar = 2)) "

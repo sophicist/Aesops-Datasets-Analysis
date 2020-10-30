@@ -1,0 +1,9 @@
+{
+    "path" : "~/AESOPS/Datasets/Gapminder",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1581317939987.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "20E7C037",
+    "lastKnownWriteTime" : 1582012205,
+    "last_content_update" : 1583583283057,
+    "path" : "~/AESOPS/Datasets/Gapminder/Gapminder.Rmd",
+    "project_path" : "Gapminder.Rmd",
+    "properties" : {
+        "cursorPosition" : "88,3",
+        "last_setup_crc32" : "",
+        "scrollLine" : "88",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

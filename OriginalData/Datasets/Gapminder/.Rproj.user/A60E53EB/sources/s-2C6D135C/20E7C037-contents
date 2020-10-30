@@ -1,0 +1,159 @@
+---
+title: "John Kamau"
+author: "Kamau Kamau"
+date: "10/02/2020"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE,fig.height = 5,fig.width = 7}
+knitr::opts_chunk$set(echo = T,warning = F,message =F)
+```
+
+# The Gapminder Project
+
+Gapminder is an organzation based in Sweden that seeks to fight devastating ignorance using statistical tools. They have colelcted alot of data on most countries in the world on ndicators that show performance of the countries in welfare, income etc. It promotes the achievement of the sustainable goals and millenium goals from the united Nations  through better understanding of world data. They have a number of interesting tools that I would recommend that you check out on their website and play around with the data.
+
+
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(gapminder)
+library(rworldmap) ## plotting the data on World Map
+library(countrycode) ## Converting the country name to Country code
+library(dplyr) ## For manipulating, transforming, filtering, summarizing the data
+library(Hmisc)
+library(printr) 
+library(RColorBrewer) 
+df <- gapminder
+
+```
+
+***Data Description***
+----
+
+The data  used comes from the gapminder organization mentioned above. It has a total of six columns and 1704 rows.
+The columns are Country, Continent, year, Life expectancy, population and GDP (gross domestic product) per capita  which basically means the GPD / population. Its a better measure of economic performance than just GDP because it takes into account the country size based on its population and also indicates income distribution in the country.
+The years range from `min(gapminder$year)` to `max(gapminder$year)`
+
+```{r}
+sum(complete.cases(gapminder)) ## No missing values found
+#describe(gapminder_unfiltered) %>% t()
+head(gapminder)
+```
+
+***Exploration of the Data***
+-----
+
+We can look at the general trend in the GDP of some countries within the gapminder dataset to see how the economies have been  performing over the years. The general trend is positive,its safe to say that gdp has been growing in most countries the only difference is the growth rates. Evidently, Brazil, China and Egypt are the most dramatic for the current dataset slice with a few countries from Africa,Asia and USA with china showing the fastest growth rate while that of Brazil is somewhat gradual.
+
+
+
+
+```{r }
+library(plotly)
+countries <- c("Kenya","Uganda","Tanzania","Nigeria","Ethiopia","Egypt","SouthAfrica","USA","Brazil","Britain","China","India")
+#describe(df)
+Graph <- df %>% filter(country %in% countries) %>% ggplot(aes(x = year,y =gdpPercap,color = country))+geom_line()+labs(title = "GDP growth rates over the years")+theme(plot.title = element_text(hjust = 0.5)) + geom_point()
+Graph
+```
+
+***GDP Distribution 2007 ***
+----
+
+Wee can look at the distribution of incomes all over the world in a single year ( in this case 2007) using a worldmap. Worldmaps are a great tool to visualize global data that has the countries in it. As expected, european countries seem to have the largest GDP with Africa having the least.
+
+```{r}
+df$countrycode <- countrycode(df$country, 'country.name', 'iso3c')
+  
+sPDF <- joinCountryData2Map(df %>% filter(year == 2007)
+                              ,joinCode = "ISO3"
+                              ,nameJoinColumn = "countrycode"
+                              ,mapResolution = "coarse"
+                            , verbose = T)
+ colourPalette <- brewer.pal(7,'GnBu')
+
+mapParams <- mapCountryData(sPDF,
+                            nameColumnToPlot="gdpPercap",
+                            addLegend=F,
+                            colourPalette=colourPalette )
+
+do.call(addMapLegend
+        ,c(mapParams
+           ,legendLabels="all"
+           ,legendWidth=0.5
+           ,legendIntervals="data"
+           ,legendMar = 2)) 
+```
+# Scatter Plot
+
+we can try and visualize most of this data  using a scatter plot where the xaxis represents the GDP and the y axis the life expectancy. It is clear that GDP and lifeExp
+```{r}
+library(ggrepel)
+gapminder %>% filter(year == 2007) %>% ggplot(aes(x = gdpPercap,y = lifeExp,size = pop/1000000,color = continent,label = country))+geom_jitter()+geom_text_repel(nudge_x = 0.065)+scale_x_log10()
+#+theme(legend.position = "none") 
+```
+
+
+***Countries with highest GDP 2007***
+-----
+# Worldwide
+
+```{r}
+gap2007 <- df %>% filter(year == 2007)
+count <- gap2007 %>% arrange(-gdpPercap) %>% head(10) %>% select(country, gdpPercap) 
+count$country <- factor(count$country)
+count%>% ggplot(aes(x = sort(country),y = gdpPercap))+geom_bar(stat = "identity",fill = 'purple')+coord_flip()
+```
+
+# Africa
+
+```{r}
+gap2007<-gap2007 %>% filter(continent =="Africa") %>%  filter(year == 2007)
+count <- gap2007 %>% arrange(-gdpPercap) %>% head(10) %>% select(country, gdpPercap) 
+count$country <- factor(count$country)
+count%>% ggplot(aes(x = sort(country),y = gdpPercap))+geom_bar(stat = "identity",fill = "#8D608C")+coord_flip()
+```
+
+***Does the Life expectancy really grow each year?***
+-----
+although the graphbelow seems to indicate that for most countries, the Lifeexpectancy  grows each year, we can consider a more rigorous way of proving that this is true for atleast a majority of the countries using regression.
+```{r}
+df %>% ggplot(aes(x = year,y =lifeExp,group = country))+geom_line()
+```
+
+```{r}
+library(tidyverse)
+nested <- df %>% group_by(country) %>% nest()
+
+
+reg <- function(df){
+  m = lm(gdpPercap~year,data = df)
+  return(m)
+}
+Models  = nested %>% mutate(model = map(data,reg),
+                       coef = map(model,broom::tidy))
+
+```
+```{r}
+Models.coef  <- Models %>% unnest(coef)
+#Models.coef
+Models.coef %>% 
+  mutate(term = fct_recode(term, 
+                           Intercept = "(Intercept)", 
+                           Slope = "year")) %>% 
+  ggplot(aes(estimate, fill = term)) + 
+  geom_density(show.legend = FALSE, alpha = 0.5) + 
+  geom_histogram(col = "black", fill = "lightgrey",
+                 alpha = 0.5,bins =50,
+                 aes(y = ..density..)) + 
+  facet_wrap(~term, scales = "free") + 
+  scale_fill_brewer(palette = "Set1") + 
+  theme_minimal() + 
+  labs(y = NULL, x = "Estimate")
+```
+
+

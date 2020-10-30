@@ -1,0 +1,183 @@
+---
+title: "John Kamau"
+author: "Kamau Kamau"
+date: "10/02/2020"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE,fig.height = 5,fig.width = 7}
+knitr::opts_chunk$set(echo = T,warning = F,message =F)
+```
+
+# The Gapminder Project
+
+Gapminder is an organzation based in Sweden that seeks to fight devastating ignorance using statistical tools. They have colelcted alot of data on most countries in the world on ndicators that show performance of the countries in welfare, income etc. It promotes the achievement of the sustainable goals and millenium goals from the united Nations  through better understanding of world data. They have a number of interesting tools that I would recommend that you check out on their website and play around with the data.
+
+
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(gapminder)
+library(rworldmap) ## plotting the data on World Map
+library(countrycode) ## Converting the country name to Country code
+library(dplyr) ## For manipulating, transforming, filtering, summarizing the data
+library(Hmisc)
+library(printr) 
+library(RColorBrewer) 
+df <- gapminder
+
+```
+
+***Data Description***
+----
+
+The data  used comes from the gapminder organization mentioned above. It has a total of six columns and 1704 rows.
+The columns are Country, Continent, year, Life expectancy, population and GDP (gross domestic product) per capita  which basically means the GPD / population. Its a better measure of economic performance than just GDP because it takes into account the country size based on its population and also indicates income distribution in the country.
+The years range from `min(gapminder$year)` to `max(gapminder$year)`
+
+```{r}
+sum(complete.cases(gapminder)) ## No missing values found
+#describe(gapminder_unfiltered) %>% t()
+head(gapminder) %>% kable()
+```
+
+***Exploration of the Data***
+-----
+
+We can look at the general trend in the GDP of some countries within the gapminder dataset to see how the economies have been  performing over the years. The general trend is positive,its safe to say that gdp has been growing in most countries the only difference is the growth rates. Evidently, Brazil, China and Egypt are the most dramatic for the current dataset slice with a few countries from Africa,Asia and USA with china showing the fastest growth rate while that of Brazil is somewhat gradual.
+
+
+
+
+```{r }
+library(plotly)
+countries <- c("Kenya","Uganda","Tanzania","Nigeria","Ethiopia","Egypt","SouthAfrica","USA","Brazil","Britain","China","India")
+#describe(df)
+Graph <- df %>% filter(country %in% countries) %>% ggplot(aes(x = year,y =gdpPercap,color = country))+geom_line()+labs(title = "GDP growth rates over the years")+theme(plot.title = element_text(hjust = 0.5)) + geom_point()
+Graph
+```
+
+***GDP Distribution 2007 ***
+----
+
+Wee can look at the distribution of incomes all over the world in a single year ( in this case 2007) using a worldmap. Worldmaps are a great tool to visualize global data that has the countries in it. As expected, european countries seem to have the largest GDP with Africa having the least.
+
+```{r,fig.width = 10,fig.height =8}
+df$countrycode <- countrycode(df$country, 'country.name', 'iso3c')
+  
+sPDF <- joinCountryData2Map(df %>% filter(year == 2007)
+                              ,joinCode = "ISO3"
+                              ,nameJoinColumn = "countrycode"
+                              ,mapResolution = "coarse"
+                            , verbose = T)
+ colourPalette <- brewer.pal(7,'GnBu')
+
+mapParams <- mapCountryData(sPDF,
+                            nameColumnToPlot="gdpPercap",
+                            addLegend=F,
+                            colourPalette=colourPalette )
+
+do.call(addMapLegend
+        ,c(mapParams
+           ,legendLabels="all"
+           ,legendWidth=0.5
+           ,legendIntervals="data"
+           ,legendMar = 2)) 
+```
+
+# Scatter Plot
+
+we can try and visualize most of this data  using a scatter plot where the x axis represents the GDP and the y axis the life expectancy. It is clear that GDP and lifeExp have a positive relationship as shown below. We have selected a single year (2007) for this analysis, a better method would be to use GGanimate to see what has been happening to the GDP and Life expectancy over the years. It is clear that African countries (in Red) are doing very poorly particularly to life expectancy as some have high GDP but low life expectancy like South Africa.
+
+```{r,fig.height =8,fig.width =10}
+library(ggrepel)
+gapminder %>% filter(year == 2007) %>% ggplot(aes(x = gdpPercap,y = lifeExp,size = pop/1000000,color = continent,label = country))+geom_jitter()+geom_text_repel(nudge_x = 0.08)+scale_x_log10()+labs(title = "GDP vs LifeExp in 2007")
+#+theme(legend.position = "none") 
+```
+
+
+***Countries with highest GDP 2007***
+-----
+# Worldwide
+
+Here are some countries with the highest GDP per capita. Please note that per capita means that the GDP is divided over the countries population so a country like USA that has very high GDP is seen to have lower GDP per capita due to its high population.
+
+```{r}
+gap2007 <- df %>% filter(year == 2007)
+summary(gap2007$gdpPercap)
+count <- gap2007 %>% arrange(-gdpPercap) %>% select(country, gdpPercap) %>% filter(gdpPercap > 40000)
+count$country <- factor(count$country)
+count%>% ggplot(aes(x = sort(country),y = gdpPercap))+geom_bar(stat = "identity",fill = 'purple')+coord_flip()
+```
+
+# Africa
+
+The same thing goes for African Countries, Algeria is seen to have the highest  GDP per cap
+
+```{r}
+gap2007<-gap2007 %>% filter(continent =="Africa") %>%  filter(year == 2007)
+summary(gap2007$gdpPercap)
+count <- gap2007 %>% arrange(-gdpPercap) %>% select(country, gdpPercap) %>% filter(gdpPercap>5000)
+count$country <- factor(count$country)
+count%>% ggplot(aes(x = sort(country),y = gdpPercap))+geom_bar(stat = "identity",fill = "#8D608C")+coord_flip()
+```
+
+***Does the Life expectancy really grow each year?***
+-----
+although the graph below seems to indicate that for most countries, the Lifeexpectancy  grows each year, We cannot just trust  our eyes and conclude that most countries have seen a rise in  in life expectancy. This is because there are some countries that have declining life expectancy and we can therefore not tell just by looking at the graph below that for sure the average behavior is a rise in life expectancy over all.
+
+```{r}
+df %>% ggplot(aes(x = year,y =lifeExp,group = country))+geom_line(color ="purple")+labs(title = "life expectancy for all countrie in Gapminder Dataset")
+```
+
+# Regression
+
+A more robust way to find the behavior of life expectancy over time is to use regression with the following equation:
+
+$lifeExp  = B1 + B2* year$
+
+here we are looking at the relationship between changes over time and life expectancy. The analysis for all the countries is a bit involved and requires using Nestng function which splits the data in our case by country, we do a regression for each country and extract the coefficient for the year, we then plot a histogram for all these coefficients and see if they are positive for the most part. 
+
+It is clear from the graphs below that whereas the intercep is mostly negative, the slope is positive for a majority of the countries. ( the part beyond zero is the largest, actually I would estimate over 99% of the countries have had a positive growth of lifeExp over the years)
+
+```{r}
+library(tidyverse)
+nested <- df %>% group_by(country) %>% nest()
+
+
+reg <- function(df){
+  m = lm(lifeExp~year,data = df)
+  return(m)
+}
+Models  = nested %>% mutate(model = map(data,reg),
+                       coef = map(model,broom::tidy))
+
+```
+```{r}
+Models.coef  <- Models %>% unnest(coef)
+#Models.coef
+Models.coef %>% 
+  mutate(term = fct_recode(term, 
+                           Intercept = "(Intercept)", 
+                           Slope = "year")) %>% 
+  ggplot(aes(estimate, fill = term)) + 
+  geom_density(show.legend = FALSE, alpha = 0.5) + 
+  geom_histogram(col = "black", fill = "lightgrey",
+                 alpha = 0.5,bins =50,
+                 aes(y = ..density..)) + 
+  facet_wrap(~term, scales = "free") + 
+  scale_fill_brewer(palette = "Set1") + 
+  theme_minimal() + 
+  labs(y = NULL, x = "Estimate")
+```
+
+
+# Conclusions and Further Analysis
+
+The Gapminder is an interesting dataset especually because its collected for such a long time and includes so many countries with each indicator showing an important part of the countries overall performance both economically and welfare. We can do alot of analysis: cross sectional where we look at comparisons over a specific year, or time series where we see analysis over the years.
+
+One can consider doing more analysis, in particular using the GGanimate library to plot an animated scatter plot ( or bubble plot as popularized by the gapminder organixation) to see how GDP vs life Exp performs over the years.

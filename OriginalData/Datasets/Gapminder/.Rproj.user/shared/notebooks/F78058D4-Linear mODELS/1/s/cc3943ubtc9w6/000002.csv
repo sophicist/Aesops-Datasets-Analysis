@@ -1,0 +1,3 @@
+"0","library(gapminder)"
+"0","ggplot(gapminder, aes(year, lifeExp, group = country)) +"
+"0","    geom_line(alpha = 0.25)"

@@ -1,0 +1,9 @@
+today <- "2020/03/07"
+library(lubridate)
+today <-date(today)
+birthday <- "1989/01/01"
+birthday <- date(birthday)
+age <-difftime(today,birthday)
+
+age <- as.numeric(age)/365.5
+
